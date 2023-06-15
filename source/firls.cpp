@@ -1,3 +1,7 @@
+/*
+ * Least squares FIR filter calculation for type I and type II symmetrical FIR filters.
+ * This is a translation of SciPy signal.firls (only type I filters) to C++, later extended for type II filters.
+ */
 #include "fir.hpp"
 #include <Eigen/Core>
 #include <Eigen/QR>

@@ -1,3 +1,9 @@
+/*
+ * Test cases for firls and freqz
+ * Most of the firls test cases are translated versions of the SciPy
+ * signal.firls test cases.
+ */
+
 #include "fir.hpp"
 #include "firfreqz_naive.hpp"
 #include <gtest/gtest.h>

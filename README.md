@@ -12,12 +12,13 @@ cmake -B build
 cmake --build build
 ctest --test-dir build
 ```
+See also the folder speed/ for some speed tests.
 
 # references
 - [SciPy signal.firls](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.firls.html) - Python implementation for type I FIR filters, used as basis for this implementation. 
 - [unofficial Octave firls by Ionescu Vlad](https://savannah.gnu.org/bugs/?func=detailitem&item_id=51310) - Octave implementation for type I-IV FIR filters, used for validation of this implementation. Not (yet) part of Octave.
 - [Eigen](https://eigen.tuxfamily.org/) - C++ template library for matrix manipulations. fir-cpp uses the complete orthogonal decomposition to solve the equations. Compile time dependency.
-- [KISS FFT by Mark Borgerding](https://github.com/mborgerding/kissfft) - C/C++ library for FFT calculation, used for calculating efficiently the frequency response. Relevant source files have been copied in this project. See the folder kissfft.
+- [KISS FFT by Mark Borgerding](https://github.com/mborgerding/kissfft) - C/C++ library for FFT calculation, used for calculating efficiently the frequency response. Some source files from release 131.1.0 have been copied in this project. See the folder kissfft.
 
 SciPy signal.firls and Octave firls both refer to the following article for a description of the algorithm:
 - Ivan Selesnick, Linear-Phase Fir Filter Design By Least Squares. OpenStax CNX. Aug 9, 2005

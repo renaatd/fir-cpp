@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test FIR-C++</title>
+
+    <!-- Create object Module before emscripten code is loaded -->
+    <script src="fir.js"></script>
+    <script>
+        function myLog(msg) {
+            document.write(`<BR>${msg}`);
+        }
+
+        function assert(condition, message) {
+            if (!condition) {
+                throw message || "Assertion failed";
+            }
+        }
+
+        /**
+         * Allocate an array of values on the EmScripten heap and return a pointer
+         * @param {*} module  Emscripten instance
+         * @param {*} data    Array containing numbers
+         * @returns pointer in Emscripten heap containing the array. This must be freed after use with module._free(ptr)
+         */
+        function createEmscriptenArrayDoubles(module, data) {
+            const data_float64 = new Float64Array(data);
+
+            const nDataBytes = data_float64.length * data_float64.BYTES_PER_ELEMENT;
+            const dataPtr = module._malloc(nDataBytes);
+
+            // Copy data to Emscripten heap (directly accessed from Module.HEAPU8)
+            const dataHeap = new Uint8Array(module.HEAPU8.buffer, dataPtr, nDataBytes);
+            dataHeap.set(new Uint8Array(data_float64.buffer));
+
+            return dataPtr;
+        }
+
+        /**
+         * Reserve room for an array of doubles on the EmScripten heap and return a pointer
+         * @param {*} module  Emscripten instance
+         * @param {number} length  No of doubles
+         * @returns pointer in Emscripten heap containing the array. This must be freed after use with module._free(ptr)
+         */
+        function reserveEmscriptenArrayDoubles(module, length) {
+            const nDataBytes = length * Float64Array.BYTES_PER_ELEMENT;
+            const dataPtr = module._malloc(nDataBytes);
+            return dataPtr;
+        }
+
+        /**
+         * Copy an array of doubles from the Emscripten heap to a newly created JavaScript Float64Array
+         * @param {*} module  Emscripten instance
+         * @param {number} dataPtr  Pointer in emscripten heap to the input array
+         * @param {number} length  No of elements in the input array
+         * @returns  Array containing the data
+         */
+        function getEmscriptenArrayDoubles(module, dataPtr, length) {
+            // inner Float64Array is a view on the heap. Copy this to a separate Float64Array
+            return new Float64Array(new Float64Array(module.HEAPU8.buffer, dataPtr, length));
+        }
+
+        Module().then(instance => {
+            myLog('Testing error codes');
+            firerror = instance.cwrap(
+                'firerror', // name
+                'string', // return value
+                ['number'] // arguments
+            );
+            for (let i = -1; i < 8; i++) {
+                const message = firerror(i);
+                myLog(`ID ${i} - ${message}`);
+            }
+            myLog('');
+            return instance;
+        }).then(instance => {
+            myLog('Testing firls speed');
+            console.log("instance instantiated!");
+
+            // extern "C" int firls(FirFloat result[], int numTaps, int numBands, const FirFloat bands[], const FirFloat desiredBegin[], const FirFloat desiredEnd[], const FirFloat weight[], FirFloat fs);
+            firls_firls = instance.cwrap(
+                'firls', // name
+                'number', // return value
+                ['number', 'number', 'number', 'number', 'number', 'number', 'number', 'number'] // arguments
+            );
+
+            const MAXTAPS = 1010;
+            const NUMBANDS = 2;
+            const a = 0.1; // width of the transition band
+
+            const bands = [0, a, 0.5 - a, 0.5];
+            const desired = [1, 0];
+            const weight = [1, 1];
+
+            // Pass all data to Emscripten heap
+            const bandsPtr = createEmscriptenArrayDoubles(instance, bands);
+            const desiredPtr = createEmscriptenArrayDoubles(instance, desired);
+            const weightPtr = createEmscriptenArrayDoubles(instance, weight);
+
+            myLog("taps, total (ms), setup (ms), C++ (ms), teardown (ms), DC gain")
+            for (let i = 1; i < MAXTAPS; i += 100) {
+                const t0 = performance.now();
+                const tapsPtr = reserveEmscriptenArrayDoubles(instance, i);
+
+                const t1 = performance.now();
+                const ret = firls_firls(tapsPtr, i, NUMBANDS, bandsPtr, desiredPtr, desiredPtr, weightPtr, 1.0);
+                const t2 = performance.now();
+                const taps = getEmscriptenArrayDoubles(instance, tapsPtr, i);
+
+                // Prove data is copied outside the heap by overwriting the heap
+                for (let j = 0; j < i * Float64Array.BYTES_PER_ELEMENT; j++) {
+                    instance.HEAPU8[tapsPtr + j] = 0;
+                }
+
+                instance._free(tapsPtr);
+                const t3 = performance.now();
+
+                assert(ret == 0, "firls returned error!");
+                myLog(`${i}, ${(t3 - t0).toFixed(3)}, ${(t1 - t0).toFixed(3)}, ${(t2 - t1).toFixed(3)}, ${(t3 - t2).toFixed(3)}, ${taps.reduce((a, b) => a + b, 0)}`);
+            }
+
+            // Free memory
+            instance._free(weightPtr);
+            instance._free(desiredPtr);
+            instance._free(bandsPtr);
+
+            console.log("leaving instance!");
+        });
+    </script>
+
+</head>
+<body>
+</body>
+</html>

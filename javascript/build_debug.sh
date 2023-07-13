@@ -20,6 +20,6 @@ em++ -Wall -Wextra -fexceptions -fsanitize=address -g2 \
   -s EXPORTED_RUNTIME_METHODS=cwrap \
   -o "${OUTPUT_FOLDER}/fir.mjs" \
   ../source/firls.cpp ../source/firerror.cpp ../source/firfreqz.cpp \
-  ../kissfft/source/kiss_fft.c ../kissfft/source/kiss_fftr.c \
+  ../kissfft/source/kiss_fft.cpp ../kissfft/source/kiss_fftr.cpp \
   ./sanitizer.cpp
 echo "Done"

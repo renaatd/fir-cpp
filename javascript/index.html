@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test FIR-C++</title>
+
+    <!-- Create object Module before emscripten code is loaded -->
+    <script type="module">
+        import { createEmscriptenArrayDoubles, reserveEmscriptenArrayDoubles, getEmscriptenArrayDoubles } from './emscripten_helpers.mjs'
+        import Module from './fir.mjs';
+
+        function myLog(msg) {
+            document.write(`<BR>${msg}`);
+        }
+
+        function assert(condition, message) {
+            if (!condition) {
+                throw message || "Assertion failed";
+            }
+        }
+
+        Module().then(instance => {
+            myLog('Testing error codes');
+            const firerror = instance.cwrap(
+                'firerror', // name
+                'string', // return value
+                ['number'] // arguments
+            );
+            for (let i = -1; i < 8; i++) {
+                const message = firerror(i);
+                myLog(`ID ${i} - ${message}`);
+            }
+            myLog('');
+            return instance;
+        }).then(instance => {
+            myLog('Testing firls speed');
+            console.log("instance instantiated!");
+
+            // extern "C" int firls(FirFloat result[], int numTaps, int numBands, const FirFloat bands[], const FirFloat desiredBegin[], const FirFloat desiredEnd[], const FirFloat weight[], FirFloat fs);
+            const firls_firls = instance.cwrap(
+                'firls', // name
+                'number', // return value
+                ['number', 'number', 'number', 'number', 'number', 'number', 'number', 'number'] // arguments
+            );
+
+            const MAXTAPS = 1010;
+            const NUMBANDS = 2;
+            const a = 0.1; // width of the transition band
+
+            const bands = [0, a, 0.5 - a, 0.5];
+            const desired = [1, 0];
+            const weight = [1, 1];
+
+            // Pass all data to Emscripten heap
+            const bandsPtr = createEmscriptenArrayDoubles(instance, bands);
+            const desiredPtr = createEmscriptenArrayDoubles(instance, desired);
+            const weightPtr = createEmscriptenArrayDoubles(instance, weight);
+
+            myLog("taps, total (ms), setup (ms), C++ (ms), teardown (ms), DC gain")
+            for (let i = 1; i < MAXTAPS; i += 100) {
+                const t0 = performance.now();
+                const tapsPtr = reserveEmscriptenArrayDoubles(instance, i);
+
+                const t1 = performance.now();
+                const ret = firls_firls(tapsPtr, i, NUMBANDS, bandsPtr, desiredPtr, desiredPtr, weightPtr, 1.0);
+                const t2 = performance.now();
+                const taps = getEmscriptenArrayDoubles(instance, tapsPtr, i);
+
+                // Prove data is copied outside the heap by overwriting the heap
+                for (let j = 0; j < i * Float64Array.BYTES_PER_ELEMENT; j++) {
+                    instance.HEAPU8[tapsPtr + j] = 0;
+                }
+
+                instance._free(tapsPtr);
+                const t3 = performance.now();
+
+                assert(ret == 0, "firls returned error!");
+                myLog(`${i}, ${(t3 - t0).toFixed(3)}, ${(t1 - t0).toFixed(3)}, ${(t2 - t1).toFixed(3)}, ${(t3 - t2).toFixed(3)}, ${taps.reduce((a, b) => a + b, 0)}`);
+            }
+
+            // Free memory
+            instance._free(weightPtr);
+            instance._free(desiredPtr);
+            instance._free(bandsPtr);
+
+            console.log("leaving instance!");
+        });
+    </script>
+</head>
+<body>
+</body>
+</html>

@@ -14,6 +14,9 @@ ctest --test-dir build
 ```
 See also the folder speed/ for some speed tests.
 
+# JavaScript/Emscripten
+See the folder javascript/ for simple build scripts + demos in JavaScript.
+
 # references
 - [SciPy signal.firls](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.firls.html) - Python implementation for type I FIR filters, used as basis for this implementation. 
 - [unofficial Octave firls by Ionescu Vlad](https://savannah.gnu.org/bugs/?func=detailitem&item_id=51310) - Octave implementation for type I-IV FIR filters, used for validation of this implementation. Not (yet) part of Octave.

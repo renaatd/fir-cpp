@@ -1,55 +1,17 @@
+// const factory = require('../build_javascript/fir.js');
+// only works in module (.mjs file):
+import factory from '../build_javascript/fir.mjs';
+import { createEmscriptenArrayDoubles, reserveEmscriptenArrayDoubles, getEmscriptenArrayDoubles } from './emscripten_helpers.mjs'
+
 let cwrap_freqz;
 let cwrap_firls;
 let cwrap_firerror;
+let cwrap_get_stack_free;
 
 function assert(condition, message) {
   if (!condition) {
     throw message || "Assertion failed";
   }
-}
-
-/**
- * Allocate an array of values on the EmScripten heap and return a pointer
- * @param {*} module  Emscripten instance
- * @param {*} data    Array containing numbers
- * @returns pointer in Emscripten heap containing the array. This must be freed after use with module._free(ptr)
- */
-function createEmscriptenArrayDoubles(module, data) {
-  const data_float64 = new Float64Array(data);
-
-  const nDataBytes = data_float64.length * data_float64.BYTES_PER_ELEMENT;
-  const dataPtr = module._malloc(nDataBytes);
-
-  // Copy data to Emscripten heap (directly accessed from Module.HEAPU8)
-  const dataHeap = new Uint8Array(module.HEAPU8.buffer, dataPtr, nDataBytes);
-  dataHeap.set(new Uint8Array(data_float64.buffer));
-
-  return dataPtr;
-}
-
-/**
- * Reserve room for an array of doubles on the EmScripten heap and return a pointer
- * @param {*} module  Emscripten instance
- * @param {number} length  No of doubles
- * @returns pointer in Emscripten heap containing the array. This must be freed after use with module._free(ptr)
- */
-function reserveEmscriptenArrayDoubles(module, length) {
-  const nDataBytes = length * Float64Array.BYTES_PER_ELEMENT;
-  const dataPtr = module._malloc(nDataBytes);
-  return dataPtr;
-}
-
-/**
- * Copy an array of doubles from the Emscripten heap to a newly created JavaScript Float64Array
- * @param {*} module  Emscripten instance
- * @param {number} dataPtr  Pointer in emscripten heap to the input array
- * @param {number} length  No of elements in the input array
- * @returns  Array containing the data
- */
-function getEmscriptenArrayDoubles(module, dataPtr, length) {
-  // inner Float64Array is a view on the heap. Copy this to a separate Float64Array
-  return new Float64Array(new Float64Array(module.HEAPU8.buffer, dataPtr, length));
-  // slower variant: return Array.from(new Float64Array(module.HEAPU8.buffer, dataPtr, length));
 }
 
 function freqz(module, noFrequencies, taps, fs) {
@@ -79,10 +41,6 @@ function freqz(module, noFrequencies, taps, fs) {
   return [ret, frequencies, magnitudes];
 }
 
-const factory = require('../build_javascript/fir.js');
-// only works in module (.mjs file):
-// import factory from 'firls.js';
-
 factory().then(instance => {
   // save all the wrappers for later reuse
 
@@ -106,15 +64,16 @@ factory().then(instance => {
     ['number'] // arguments
   );
 
-  return instance;
-}).then(instance => {
-  console.log('\nTesting stack_free');
-  stack_free = instance.cwrap(
+  cwrap_get_stack_free = instance.cwrap(
     'stack_get_free', // name
     'number', // return value
     [] // arguments
   );
-  console.log("Free stack size: ", stack_free(), " bytes.");
+
+  return instance;
+}).then(instance => {
+  console.log('\nTesting stack_free');
+  console.log("Free stack size: ", cwrap_get_stack_free(), " bytes.");
 
   return instance;
 }).then(instance => {
@@ -213,12 +172,7 @@ factory().then(instance => {
   return instance;
 }).then(instance => {
   console.log('\nTesting stack_free again');
-  stack_free = instance.cwrap(
-    'stack_get_free', // name
-    'number', // return value
-    [] // arguments
-  );
-  console.log("Free stack size: ", stack_free(), " bytes.");
+  console.log("Free stack size: ", cwrap_get_stack_free(), " bytes.");
 
   return instance;
 });

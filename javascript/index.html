@@ -4,8 +4,10 @@
     <title>Test FIR-C++</title>
 
     <!-- Create object Module before emscripten code is loaded -->
-    <script src="fir.js"></script>
-    <script>
+    <script type="module">
+        import { createEmscriptenArrayDoubles, reserveEmscriptenArrayDoubles, getEmscriptenArrayDoubles } from './emscripten_helpers.mjs'
+        import Module from './fir.mjs';
+
         function myLog(msg) {
             document.write(`<BR>${msg}`);
         }
@@ -16,52 +18,9 @@
             }
         }
 
-        /**
-         * Allocate an array of values on the EmScripten heap and return a pointer
-         * @param {*} module  Emscripten instance
-         * @param {*} data    Array containing numbers
-         * @returns pointer in Emscripten heap containing the array. This must be freed after use with module._free(ptr)
-         */
-        function createEmscriptenArrayDoubles(module, data) {
-            const data_float64 = new Float64Array(data);
-
-            const nDataBytes = data_float64.length * data_float64.BYTES_PER_ELEMENT;
-            const dataPtr = module._malloc(nDataBytes);
-
-            // Copy data to Emscripten heap (directly accessed from Module.HEAPU8)
-            const dataHeap = new Uint8Array(module.HEAPU8.buffer, dataPtr, nDataBytes);
-            dataHeap.set(new Uint8Array(data_float64.buffer));
-
-            return dataPtr;
-        }
-
-        /**
-         * Reserve room for an array of doubles on the EmScripten heap and return a pointer
-         * @param {*} module  Emscripten instance
-         * @param {number} length  No of doubles
-         * @returns pointer in Emscripten heap containing the array. This must be freed after use with module._free(ptr)
-         */
-        function reserveEmscriptenArrayDoubles(module, length) {
-            const nDataBytes = length * Float64Array.BYTES_PER_ELEMENT;
-            const dataPtr = module._malloc(nDataBytes);
-            return dataPtr;
-        }
-
-        /**
-         * Copy an array of doubles from the Emscripten heap to a newly created JavaScript Float64Array
-         * @param {*} module  Emscripten instance
-         * @param {number} dataPtr  Pointer in emscripten heap to the input array
-         * @param {number} length  No of elements in the input array
-         * @returns  Array containing the data
-         */
-        function getEmscriptenArrayDoubles(module, dataPtr, length) {
-            // inner Float64Array is a view on the heap. Copy this to a separate Float64Array
-            return new Float64Array(new Float64Array(module.HEAPU8.buffer, dataPtr, length));
-        }
-
         Module().then(instance => {
             myLog('Testing error codes');
-            firerror = instance.cwrap(
+            const firerror = instance.cwrap(
                 'firerror', // name
                 'string', // return value
                 ['number'] // arguments
@@ -77,7 +36,7 @@
             console.log("instance instantiated!");
 
             // extern "C" int firls(FirFloat result[], int numTaps, int numBands, const FirFloat bands[], const FirFloat desiredBegin[], const FirFloat desiredEnd[], const FirFloat weight[], FirFloat fs);
-            firls_firls = instance.cwrap(
+            const firls_firls = instance.cwrap(
                 'firls', // name
                 'number', // return value
                 ['number', 'number', 'number', 'number', 'number', 'number', 'number', 'number'] // arguments
@@ -126,7 +85,6 @@
             console.log("leaving instance!");
         });
     </script>
-
 </head>
 <body>
 </body>

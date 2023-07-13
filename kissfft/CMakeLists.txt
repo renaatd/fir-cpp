@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.14)
-project(kissfft LANGUAGES C)
+project(kissfft LANGUAGES CXX)
 
 add_library(
     kissfft
-    source/kiss_fft.c
-    source/kiss_fftr.c
+    source/kiss_fft.cpp
+    source/kiss_fftr.cpp
 )
 target_include_directories(
     kissfft
@@ -25,10 +25,6 @@ target_compile_options(kissfft
     -Wcast-qual
     -Wshadow
     -Wwrite-strings
-    -Wstrict-prototypes
-    -Wmissing-prototypes
-    -Wnested-externs
-    -Wbad-function-cast
 )
 target_link_libraries(
     kissfft

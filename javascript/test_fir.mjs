@@ -1,6 +1,4 @@
-// const factory = require('../build_javascript/fir.js');
-// only works in module (.mjs file):
-import factory from '../build_javascript/fir.mjs';
+import factory from './fir.mjs';
 import { createEmscriptenArrayDoubles, reserveEmscriptenArrayDoubles, getEmscriptenArrayDoubles } from './emscripten_helpers.mjs'
 
 let cwrap_freqz;

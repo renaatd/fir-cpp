@@ -1,8 +1,6 @@
 // Speed test of WASM firls on a desktop PC from 2014
 // 501 taps: 8.0 ms (C++ native: 3.7 ms)
 // 1001 taps: 61.5 ms (C++ native: 31 ms)
-// var factory = require('../build_javascript/fir.js');
-// only works in module (.mjs file):
 import factory from './fir.mjs';
 import { createEmscriptenArrayDoubles, reserveEmscriptenArrayDoubles, getEmscriptenArrayDoubles } from './emscripten_helpers.mjs'
 

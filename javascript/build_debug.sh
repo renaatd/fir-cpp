@@ -17,7 +17,7 @@ em++ -Wall -Wextra -fexceptions -fsanitize=address -g2 \
   -s EXPORT_ES6 -s MODULARIZE -s ALLOW_MEMORY_GROWTH=1 \
   -s STACK_SIZE=200000 \
   -s EXPORTED_FUNCTIONS=_firerror,_firls,_firfreqz,_malloc,_free,_leak_check,_stack_get_free,_getrlimit \
-  -s EXPORTED_RUNTIME_METHODS=cwrap \
+  -s EXPORTED_RUNTIME_METHODS=cwrap,HEAPU8 \
   -o "${OUTPUT_FOLDER}/fir.mjs" \
   ../source/firls.cpp ../source/firerror.cpp ../source/firfreqz.cpp \
   ../kissfft/source/kiss_fft.cpp ../kissfft/source/kiss_fftr.cpp \

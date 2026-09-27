@@ -7,6 +7,7 @@
 #include "fir.hpp"
 #include "firfreqz_naive.hpp"
 #include <gtest/gtest.h>
+#include <limits>
 #include <string.h>
 
 namespace {
@@ -49,6 +50,14 @@ TEST(firls, bad_args) {
     FirFloat desired_ok[2] = {1, 2};
     FirFloat weight_negative[1] = {-1};
     EXPECT_EQ(firls(result, NUMTAPS, 1, bands_ok, desired_ok, desired_ok, weight_negative, 2.0),
+              FIR_EWEIGHTS);
+    // zero weight
+    FirFloat weight_zero[1] = {0};
+    EXPECT_EQ(firls(result, NUMTAPS, 1, bands_ok, desired_ok, desired_ok, weight_zero, 2.0),
+              FIR_EWEIGHTS);
+    // Nan weight
+    FirFloat weight_nan[1] = {std::numeric_limits<FirFloat>::quiet_NaN()}; 
+    EXPECT_EQ(firls(result, NUMTAPS, 1, bands_ok, desired_ok, desired_ok, weight_nan, 2.0),
               FIR_EWEIGHTS);
 }
 

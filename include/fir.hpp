@@ -23,7 +23,8 @@ extern "C" const char *firerror(int errnum);
  *
  * @param result Coefficients of the filter, must have room for numTaps values.
  * @param numTaps The number of taps in the FIR filter (filter order + 1).
- * @param numBands Number of frequency bands, half the number of elements in `bands`.
+ * @param numBands Number of frequency bands, half the number of elements in
+ * `bands`.
  * @param bands A monotonic nondecreasing sequence containing the band edges in
  *      Hz. All elements must be non-negative and less than or equal to
  *      the Nyquist frequency. The bands are specified as
@@ -39,7 +40,7 @@ extern "C" const char *firerror(int errnum);
  * @param fs
  *      The sampling frequency of the signal. Each frequency in `bands`
  *      must be between 0 and `fs/2` (inclusive).
- * @returns 0 on success, -1 on failure
+ * @returns 0 on success, non-zero on failure
  */
 extern "C" int firls(FirFloat result[], int numTaps, int numBands, const FirFloat bands[],
                      const FirFloat desiredBegin[], const FirFloat desiredEnd[],

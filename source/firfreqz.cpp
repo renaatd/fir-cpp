@@ -1,6 +1,7 @@
 #include "fir.hpp"
 #include "kiss_fftr.h"
 #include <cmath>
+#include <vector>
 
 int firfreqz(FirFloat frequencies[], FirFloat magnitudes[], int n, int numTaps,
              const FirFloat taps[], FirFloat fs) {
@@ -26,11 +27,11 @@ int firfreqz(FirFloat frequencies[], FirFloat magnitudes[], int n, int numTaps,
      * For each output value, we need 2 values in the input vector and 2 in the
      * output vector, so 32 bytes/element. So for an output length of 5000, we
      * need approx 150 kB. Default stack in Emscripten is 64 kb, so we must
-     * either extend the stack or allocate on the heap. For simplicity, we
-     * allocate on the stack.
+     * either extend the stack or allocate on the heap. We allocate on the heap
+     * using std::vector.
      */
-    kiss_fft_scalar in[fftInputLength];
-    kiss_fft_cpx out[fftInputLength / 2 + 1];
+    std::vector<kiss_fft_scalar> in(fftInputLength);
+    std::vector<kiss_fft_cpx> out(fftInputLength / 2 + 1);
 
     /* Configuration: do a forward FFT, and allocate memory */
     kiss_fftr_cfg cfg;
@@ -45,7 +46,7 @@ int firfreqz(FirFloat frequencies[], FirFloat magnitudes[], int n, int numTaps,
     for (int i = numTaps; i < fftInputLength; i++) {
         in[i] = 0.0;
     }
-    kiss_fftr(cfg, in, out);
+    kiss_fftr(cfg, in.data(), out.data());
     free(cfg);
 
     for (int i = 0; i < fftInputLength / 2 + 1; i++) {

@@ -7,8 +7,8 @@
 #include <stdio.h>
 
 /**
- * Parse string s to integer, return true on success, false on failure. The string can use the 0x
- * prefix
+ * Parse string s to integer, return true on success, false on failure. The
+ * string can use the 0x prefix
  * @param result: result of conversion, only updated on success
  */
 static bool parse_int(int *result, const char *s) {

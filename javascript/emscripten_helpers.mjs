@@ -11,8 +11,13 @@ export function createEmscriptenArrayDoubles(module, data) {
     var dataPtr = module._malloc(nDataBytes);
 
     // Copy data to Emscripten heap (directly accessed from Module.HEAPU8)
-    var dataHeap = new Uint8Array(module.HEAPU8.buffer, dataPtr, nDataBytes);
-    dataHeap.set(new Uint8Array(data_float64.buffer));
+
+    // variant using a view on the heap
+    // var dataHeap = new Uint8Array(module.HEAPU8.buffer, dataPtr, nDataBytes);
+    // dataHeap.set(new Uint8Array(data_float64.buffer));
+
+    // variant using direct set on the heap
+    module.HEAPU8.set(new Uint8Array(data_float64.buffer), dataPtr);
 
     return dataPtr;
 }
@@ -39,6 +44,7 @@ export function reserveEmscriptenArrayDoubles(module, length) {
 export function getEmscriptenArrayDoubles(module, dataPtr, length) {
     // inner Float64Array is a view on the heap. Copy this to a separate Float64Array
     return new Float64Array(new Float64Array(module.HEAPU8.buffer, dataPtr, length));
+
     // slower variant (26 µs instead of 10 µs for 1000 elements):
     // return Array.from(new Float64Array(module.HEAPU8.buffer, dataPtr, length));
 }

@@ -14,7 +14,6 @@ em++ -Wall -Wextra -fexceptions -O3 --closure 1 -flto \
   -Dkiss_fft_scalar=double -ffast-math -fomit-frame-pointer \
   $(pkg-config --cflags eigen3) -I../include -I../kissfft/include \
   -s EXPORT_ES6 -s MODULARIZE -s STRICT \
-  -s STACK_SIZE=200000 \
   -s EXPORTED_FUNCTIONS=_firerror,_firls,_firfreqz,_malloc,_free,_leak_check,_stack_get_free \
   -s EXPORTED_RUNTIME_METHODS=cwrap,HEAPU8 \
   -o "${OUTPUT_FOLDER}/fir.mjs" \
